@@ -1,11 +1,14 @@
 #include <iostream>
 #include <fstream>
 #include <ostream>
+#include <sstream>
 
 using std::string;
 using std::cout;
+using std::endl;
 using std::ifstream;
 using std::getline;
+using std::stringstream;
 
 void read_1(std::string file_name){
   std::ifstream in_file;
@@ -26,17 +29,30 @@ void read_1(std::string file_name){
 void read_2(std::string file_name) {
   std::ifstream in_file(file_name);
   
-  string line;
-  while (getline(in_file, line, ' '))
+  std::string line, ss;
+  uint64_t n;
+  
+  while (getline(in_file, line))
   {
-    cout << line << ", ";
+    auto x = line.c_str()[0];
+    if (x != '='){
+      std::stringstream ss_line(line);
+      
+      ss_line >> ss;
+      // cout << ss<< "\n ";
+      
+      ss_line >> n;
+      cout << n << "\n ";
+    }
+    else{
+      // cout<< x <<endl;
+    }
   }
-  cout << "\n";
+  // cout << "\n";
   
 }
 
 int main()
 {
-  read_1("./mbpu_200904_0.log");    
-
+  read_2("data/bb_200902_0.log");    
 }

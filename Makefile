@@ -1,4 +1,4 @@
-CC := g++-8
+CC := clang++
 CXX      := -c++
 CXXFLAGS := -std=c++2a -Ofast -pedantic-errors -Wall -Wunused -Wextra -Werror
 # LDFLAGS  := -L/usr/lib -lstdc++ -lm
@@ -10,8 +10,10 @@ INCLUDE  := -I.
 # $(TARGET): 
 
 
+
 .PHONY: all run clean
 all: 
+	mkdir -p $(BUILD)
 	$(CC) $(CXXFLAGS) src/main.cc -o $(BUILD)/$(TARGET)
 
 run: all
