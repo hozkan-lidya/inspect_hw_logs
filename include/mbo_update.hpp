@@ -1,11 +1,24 @@
 #include<cstdint>
-#include<tuple>
+#include<array>
+#include<vector>
+#include<string>
+
 using timestamp_t = uint64_t;
 using oid_t = uint64_t;
+using std::string;
+
+struct log_files_t
+{
+  string mbo_file_name;
+  string mbp_file_name;
+
+};
+
 
 struct mbo_update_t
 {
-  timestamp_t   ts                 ;    
+  public:
+  timestamp_t   ts                ;    
   oid_t         hdr_oid           ;    
   uint32_t      hdr_obu_type      ;   
   uint32_t      hdr_symbol        ;   
@@ -14,6 +27,7 @@ struct mbo_update_t
   uint32_t      hdr_valid         ;   
   uint32_t      pld_quantity      ;   
   uint32_t      pld_price         ;   
+  uint32_t      pld_rut           ;   
   uint32_t      pld_valid         ;   
   uint32_t      tob_update_price  ;   
   uint32_t      tob_update_qty    ;   
@@ -30,37 +44,42 @@ struct mbo_update_t
   uint32_t      book_stream_empty ;
   uint32_t      book_stream_end   ;
 
-  auto members() /*-> decltype(std::tie(a, b, c)) */{
-    return std::tie(
-                  ts           ,     
-                  hdr_oid           ,
-                  hdr_obu_type      ,
-                  hdr_symbol        ,
-                  hdr_side          ,
-                  hdr_tag           ,
-                  hdr_valid         ,
-                  pld_quantity      ,
-                  pld_price         ,
-                  pld_valid         ,
-                  tob_update_price  ,
-                  tob_update_qty    ,
-                  tob_update_symbol ,
-                  tob_update_side   ,
-                  tob_update_empty  ,
-                  top_of_book_valid ,
-                  book_stream_price ,
-                  book_stream_qty   ,
-                  book_stream_symbol,
-                  book_stream_level ,
-                  book_stream_side  ,
-                  book_stream_valid ,
-                  book_stream_empty ,
-                  book_stream_end
-                  );
-  }
-
   mbo_update_t() = default;
-
-
+   
+  mbo_update_t(std::array<uint64_t, 25>& arr);
+  ~mbo_update_t();
    //  mbo_update_t(mbo_update_t& other);
+};
+
+struct mbp_update_t
+{
+  timestamp_t ts        ;
+  uint32_t    qty       ;
+  uint32_t    price     ;
+  uint32_t    valid     ;
+  uint32_t    symbol    ;
+  uint32_t    side      ;
+  uint32_t    add_rm    ;
+  uint32_t    tag_valid ;
+  uint32_t    tag       ;
+  uint32_t    trans_oid ;
+
+  mbp_update_t() = default;
+  mbp_update_t(std::array<uint64_t, 10>& arr);
+  ~mbp_update_t();
+   //  mbo_update_t(mbo_update_t& other);
+};
+
+class md_test_t
+{
+  public:
+    md_test_t() = default;
+    md_test_t(const log_files_t& log_files);
+
+
+  private:
+    mbp_update_t _mbp_update;
+    std::vector <mbo_update_t> _mbo_updates;
+    const string& _mbo_file_name;
+    const string& _mbp_file_name;
 };

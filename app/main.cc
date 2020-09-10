@@ -13,12 +13,6 @@ using std::ifstream;
 using std::getline;
 using std::stringstream;
 
-using bb_tuple_t = std::tuple < uint64_t,uint64_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t
-                               ,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t
-                               ,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t
-                               >;
-
-
 
 void read_1(std::string file_name){
   std::ifstream in_file;
@@ -36,44 +30,43 @@ void read_1(std::string file_name){
   in_file.close();
 }
 
+template <int m, typename update_t>
 void read_2(std::string file_name) {
-  mbo_update_t mbo_update;
-  mbo_update.members() = std::make_tuple(1, 2, 3, 1, 2, 3,1, 2, 3,1, 2, 3,1, 2, 3,1, 2, 3,1, 2, 3,1, 2, 3);
-  cout<<mbo_update.hdr_oid;
-  
-  // mbo_update =  (mbo_update_t){ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-  // (void)mbo_update;
- 
-  std::vector <mbo_update_t> mbo_updates;
-  // mbo_updates.emplace_back(mbo_update_t{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1});
-  mbo_updates.emplace_back(std::move(mbo_update));
-  std::ifstream in_file(file_name);
+
+  std::vector <update_t> updates;
+  updates.reserve(0xFFFF);
   int k =0;
+
+
+  std::ifstream in_file(file_name);
   std::string line, ss;
-  int n ;
-  bb_tuple_t bb_tuple{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+  std::array<uint64_t, m> temp_arr;
+  
   while (getline(in_file, line))
   {
-
     auto x = line.c_str()[0];
-    if (x != '='){
-      k++;
-      std::stringstream ss_line(line);
-      ss_line >> ss;
-      // cout << ss<< "\n ";
+    if (x == '='){
+      continue;
+    }
+    std::stringstream ss_line(line);
+    ss_line >> ss;
+    // cout << ss<< "\n ";
 
-      ss_line >> n;
-      auto nn = k % 24;
-      std::get< 0>(bb_tuple) = 6;
-      cout << std::get<0>(bb_tuple) << "\n ";
+    ss_line >> temp_arr[ k++ ];
+    if (k ==m){
+      k = 0;
+      updates.emplace_back(temp_arr);
+      auto mm = updates.back();
+      cout<< updates.back().ts<<", ";
+      cout<<"\n";
     }
-    else{
-      
+
     }
-  }
-  //  cout << "k: " << k  << "\n"; 
+
 }
+
 int main()
 {
-  read_2("data/bb_200904_0.log");    
+  read_2<25, mbo_update_t>("data/bb_200902_0.log");    
 }
