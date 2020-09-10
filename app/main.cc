@@ -1,10 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <ostream>
-#include <sstream>
-#include <vector>
-#include <tuple>
-#include "mbo_update.hpp"
+#include "md_test_t.hpp"
 
 using std::string;
 using std::cout;
@@ -68,5 +62,12 @@ void read_2(std::string file_name) {
 
 int main()
 {
-  read_2<25, mbo_update_t>("data/bb_200902_0.log");    
+  // read_2<25, mbo_update_t>("data/bb_200904_0.log");
+  log_files_t log_files;
+  log_files.mbo_file_name = "data/bb_200904_0.log";
+  log_files.mbp_file_name = "data/mbpu_200904_0.log";
+  md_test_t md_test(log_files);
+  cout<< md_test.mbo_size() << " - " << md_test.mbp_size() <<"\n";
+
+
 }

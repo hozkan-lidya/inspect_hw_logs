@@ -2,6 +2,11 @@
 #include<array>
 #include<vector>
 #include<string>
+#include <iostream>
+#include <fstream>
+#include <ostream>
+#include <sstream>
+#include <tuple>
 
 using timestamp_t = uint64_t;
 using oid_t = uint64_t;
@@ -75,11 +80,17 @@ class md_test_t
   public:
     md_test_t() = default;
     md_test_t(const log_files_t& log_files);
+    size_t mbo_size();
+    size_t mbp_size();
 
 
   private:
-    mbp_update_t _mbp_update;
+    template <typename update_t, int m>
+    std::vector<update_t> read_txt_to_vec(const string f_name);
+    
     std::vector <mbo_update_t> _mbo_updates;
-    const string& _mbo_file_name;
+    std::vector <mbp_update_t> _mbp_updates;
+
+    const string _mbo_file_name;
     const string& _mbp_file_name;
 };
