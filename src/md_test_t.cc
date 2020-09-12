@@ -60,13 +60,13 @@ md_test_t::md_test_t(const log_files_t& log_files) :
 _mbo_file_name(log_files.mbo_file_name),
 _mbp_file_name(log_files.mbp_file_name) {
 
-  _mbo_updates = read_txt_to_vec<mbo_update_t, 25>(_mbo_file_name);
-  _mbp_updates = read_txt_to_vec<mbp_update_t, 10>(_mbo_file_name);
+  mbo_updates = read_txt_to_vec<mbo_update_t, 25>(_mbo_file_name);
+  mbp_updates = read_txt_to_vec<mbp_update_t, 10>(_mbo_file_name);
 
 }
 
 template <typename update_t, int m>
-std::vector<update_t> md_test_t::read_txt_to_vec(const string f_name){
+std::vector<update_t> md_test_t::read_txt_to_vec(const string& f_name){
   std::vector <update_t> updates;
   updates.reserve(0xFFFF);
   int k =0;
@@ -78,8 +78,8 @@ std::vector<update_t> md_test_t::read_txt_to_vec(const string f_name){
   
   while (getline(in_file, line))
   {
-    auto x = line.c_str()[0];
-    if (x == '='){
+    // auto x = ;
+    if (line[0] == '='){
       continue;
     }
     std::stringstream ss_line(line);
@@ -100,9 +100,9 @@ std::vector<update_t> md_test_t::read_txt_to_vec(const string f_name){
 }
 
 size_t md_test_t::mbo_size(){
-  return _mbo_updates.size();
+  return mbo_updates.size();
 }
 
 size_t md_test_t::mbp_size(){
-  return _mbp_updates.size();
+  return mbp_updates.size();
 }

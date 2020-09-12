@@ -41,6 +41,7 @@ void read_2(std::string file_name) {
   {
     auto x = line.c_str()[0];
     if (x == '='){
+      cout<<x<<"\n";
       continue;
     }
     std::stringstream ss_line(line);
@@ -64,10 +65,10 @@ int main()
 {
   // read_2<25, mbo_update_t>("data/bb_200904_0.log");
   log_files_t log_files;
-  log_files.mbo_file_name = "data/bb_200904_0.log";
-  log_files.mbp_file_name = "data/mbpu_200904_0.log";
+  log_files.mbo_file_name = "data/bb_200902_0.log";
+  log_files.mbp_file_name = "data/mbpu_200902_0.log";
   md_test_t md_test(log_files);
   cout<< md_test.mbo_size() << " - " << md_test.mbp_size() <<"\n";
-
+  cout<< md_test.mbo_updates[0].hdr_oid << " - " << md_test.mbo_updates[0].ts <<"\n";
 
 }
