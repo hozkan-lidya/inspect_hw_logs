@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include<cstdint>
 #include<array>
 #include<vector>
@@ -8,6 +10,10 @@
 #include <sstream>
 #include <algorithm>
 #include <functional>
+
+#include <stdint.h>
+#include <list>
+#include <algorithm>
 
 using timestamp_t = uint64_t;
 using oid_t = uint64_t;
@@ -70,10 +76,13 @@ inline std::ostream & operator<<(std::ostream & os, const mbo_update_raw_t& u){
   os<<u.ts<<", "<<u.pld_price<<", "<<u.pld_quantity;
   return os;
 }
+
+
+
 struct __attribute__((__packed__)) mbp_update_t
 {
   timestamp_t ts        ;
-  uint32_t    oid       ;
+  uint32_t    oid       ;  // Least significant 32 bits of 64-bit oid variable 
   uint32_t    qty       ;
   uint32_t    price     ;
   uint32_t    valid     ;
@@ -89,7 +98,10 @@ struct __attribute__((__packed__)) mbp_update_t
   ~mbp_update_t();
    //  mbo_update_t(mbo_update_t& other);
 };
-
+inline std::ostream & operator<<(std::ostream & os, const mbp_update_t& u){
+  os<<u.ts<<", "<<u.oid<<", "<<u.side;
+  return os;
+}
 class md_test_t
 {
   public:

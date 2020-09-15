@@ -100,16 +100,16 @@ std::vector<update_t> md_test_t::read_txt_to_vec(const string& f_name){
           // std::cout<<mm.tob_update_symbol<<"\n";
         } 
         else if (seek_pld && temp_arr[10]) {
-          std::cout<< updates.back()<< " -- ";
+          // std::cout<< updates.back()<< " -- ";
           auto & mm = updates.back();
           mm.pld_quantity = temp_arr [7];   // quantity of the payload
-          mm.pld_price = temp_arr[8];       // quantity of the payload
+          mm.pld_price = temp_arr[8];       // price of the payload
           seek_pld = false;   // restore the flag to false again 
           
           // const auto & mm2 = updates.back();
           // if (mm.pld_price != mm2.pld_price || mm.pld_quantity != mm2.pld_quantity)
           //   {std:: cout << "AHAAA\n";}
-          std::cout<< updates.back()<< "\n";
+          // std::cout<< updates.back()<< "\n";
         }
       }
     }
@@ -135,9 +135,49 @@ std::vector<update_t> md_test_t::read_txt_to_vec(const string& f_name){
 
 
 void md_test_t::match_mbo_mbp(match_fn_t match_fn ){
-  match_fn(5);
+  // match_fn(5);
+  auto head_mbp =mbp_updates.begin(); // This one is not going to change
+  // auto tail_mbp =mbp_updates.begin();
+  // std::vector<mbp_update_t>::iterator tail_mbp{mbp_updates.begin()};
+  std::advance(head_mbp, 1);
+  std::cout<< "AHAAAA " << *head_mbp <<"\n";
+  
+  for (const auto& x : mbo_updates){
+    while (x.ts > (head_mbp -> ts) ) {
+      ++head_mbp;
+    };
+    // while (x.ts > (tail_mbp -> ts) ) {
+    //   ++tail_mbp;
+    // };
+
+    // while (!tail_mbp -> tag_valid) {
+    //   ++tail_mbp;
+    // };
+
+    auto tail_mbp =   mbp_updates.end();
+
+    auto temp = std::find_if(head_mbp, tail_mbp, 
+      [=](const mbp_update_t & M){
+      bool cond_0 = \ 
+        static_cast<bool>(M.valid )                                 &&
+        M.oid == static_cast<uint32_t>(x.hdr_oid)                   &&
+        M.side    == x.hdr_side                                     &&
+        M.symbol  == x.hdr_symbol                                   &&
+        static_cast<bool>(M.add_rm) ^ static_cast<bool>(x.hdr_obu_type);
+
+        
+        return cond_0;
+        } );
+    if(temp == mbp_updates.end()){
+      std::cout<< "NOT PRESENT"<<"\n";
+    }
+      
+    // std::cout<< "AHAAAA " << std::boolalpha << cond_0<<"\n";
+    // std::cout<< "AHAAAA 2 " << *temp<<"\n";
+    }
 
   }
+  
 
 void md_test_t::sort_entries() {
 std::sort(mbo_updates.begin(), mbo_updates.end(), [](auto &left, auto &right) {
