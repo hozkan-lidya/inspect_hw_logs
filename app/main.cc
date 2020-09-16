@@ -62,17 +62,17 @@ void read_2(std::string file_name) {
 
 int main()
 {
-  log_files_t log_files{"data/bb_200914_0.log", 
-                        "data/mbpu_200914_0.log"};
+  log_files_t log_files{"data/bb_200915_1.log", 
+                        "data/mbpu_200915_1.log"};
 
   md_test_t md_test(log_files);
   // md_test.sort_entries();
 
 
   cout<< md_test.mbo_size() << " - " << md_test.mbp_size() <<"\n";
-  auto foo_f = [] (int m) -> void {std::cout<<"KHADIDJA AGAIN"<<m<<"\n";};
+  auto foo_f = [] (int m) -> void {
+    // NOP
+  };
   md_test.match_mbo_mbp( foo_f );
-  // cout<< md_test.mbo_updates[0].hdr_oid << " - " << md_test.mbo_updates[0].ts <<"\n";
-
 
 }

@@ -17,20 +17,7 @@ pld_quantity      (arr[7]),
 pld_price         (arr[8]), 
 pld_ready         (arr[9]),
 pld_valid         (arr[10])
-// tob_update_price  (arr[11]),  
-// tob_update_qty    (arr[12]),  
-// tob_update_symbol (arr[13]),  
-// tob_update_side   (arr[14]),  
-// tob_update_empty  (arr[15]),  
-// top_of_book_valid (arr[16]),  
-// book_stream_price (arr[17]),  
-// book_stream_qty   (arr[18]),  
-// book_stream_symbol(arr[19]),  
-// book_stream_level (arr[20]),  
-// book_stream_side  (arr[21]),  
-// book_stream_valid (arr[22]),  
-// book_stream_empty (arr[23]),  
-// book_stream_end   (arr[24])
+
 
 {
  // NOP
@@ -62,6 +49,8 @@ _mbp_file_name(log_files.mbp_file_name) {
 
   mbo_updates = read_txt_to_vec<mbo_update_raw_t, 11>(_mbo_file_name);
   mbp_updates = read_txt_to_vec<mbp_update_t, 11>(_mbp_file_name);
+  sort_entries();
+
 
 }
 
@@ -133,50 +122,49 @@ std::vector<update_t> md_test_t::read_txt_to_vec(const string& f_name){
   return updates;
 }
 
-
 void md_test_t::match_mbo_mbp(match_fn_t match_fn ){
   // match_fn(5);
   auto head_mbp =mbp_updates.begin(); // This one is not going to change
+  auto tail_mbp =   mbp_updates.end();
   // auto tail_mbp =mbp_updates.begin();
   // std::vector<mbp_update_t>::iterator tail_mbp{mbp_updates.begin()};
-  std::advance(head_mbp, 1);
-  std::cout<< "AHAAAA " << *head_mbp <<"\n";
-  
-  for (const auto& x : mbo_updates){
-    while (x.ts > (head_mbp -> ts) ) {
+  // std::advance(head_mbp, 1);
+
+  for (const auto & x : mbo_updates){
+    while (! (x.ts < (head_mbp -> ts)) ) {
       ++head_mbp;
     };
     // while (x.ts > (tail_mbp -> ts) ) {
     //   ++tail_mbp;
     // };
 
-    // while (!tail_mbp -> tag_valid) {
-    //   ++tail_mbp;
-    // };
+    auto found = std::find_if(head_mbp, 
+                             tail_mbp, 
+                             [=](const mbp_update_t & M) {
+      bool is_match = \
+        x.ts < (M.ts)                                                                &&
+        static_cast<bool>(M.valid)                                                   &&
+        M.oid == static_cast<uint32_t>(x.hdr_oid)                                    &&
+        M.side    == x.hdr_side                                                      &&
+        M.symbol  == x.hdr_symbol                                                    &&
+        static_cast<bool>(M.add_rm) ^ static_cast<bool>(x.hdr_obu_type)              &&
+        (x.hdr_obu_type != 0 || (M.price == x.pld_price && M.qty == x.pld_quantity)) &&
+        (x.hdr_obu_type != 1 || M.qty == x.pld_quantity);
+    
+      return is_match;
+      } );
 
-    auto tail_mbp =   mbp_updates.end();
-
-    auto temp = std::find_if(head_mbp, tail_mbp, 
-      [=](const mbp_update_t & M){
-      bool cond_0 = \ 
-        static_cast<bool>(M.valid )                                 &&
-        M.oid == static_cast<uint32_t>(x.hdr_oid)                   &&
-        M.side    == x.hdr_side                                     &&
-        M.symbol  == x.hdr_symbol                                   &&
-        static_cast<bool>(M.add_rm) ^ static_cast<bool>(x.hdr_obu_type);
-
-        
-        return cond_0;
-        } );
-    if(temp == mbp_updates.end()){
+    if(found != tail_mbp){
+      found->valid = 0;
+      std::cout<< x.hdr_obu_type
+               << ", " << found->ts -  x.ts  
+               <<"\n";
+    } 
+    else {
       std::cout<< "NOT PRESENT"<<"\n";
     }
-      
-    // std::cout<< "AHAAAA " << std::boolalpha << cond_0<<"\n";
-    // std::cout<< "AHAAAA 2 " << *temp<<"\n";
-    }
-
   }
+}
   
 
 void md_test_t::sort_entries() {

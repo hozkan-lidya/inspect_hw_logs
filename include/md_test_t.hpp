@@ -11,9 +11,7 @@
 #include <algorithm>
 #include <functional>
 
-#include <stdint.h>
-#include <list>
-#include <algorithm>
+// #include <stdint.h>
 
 using timestamp_t = uint64_t;
 using oid_t = uint64_t;
