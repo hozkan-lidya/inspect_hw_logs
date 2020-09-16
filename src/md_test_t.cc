@@ -68,42 +68,7 @@ std::vector<update_t> md_test_t::read_txt_to_vec(const string& f_name){
   std::array<uint64_t, m> temp_arr;
     // std::cout<< sizeof(update_t) / sizeof(uint32_t)<<" -- \n";
   
-  if constexpr( std::is_same<update_t, mbo_update_raw_t>::value ) {    
-    while (getline(in_file, line)) {
-      if (line[0] == '='){
-        continue;
-      }
-      std::stringstream ss_line(line);
-      ss_line >> ss;
-      // std::cout << ss<< "\n ";
 
-      ss_line >> temp_arr[ k++ ];
-      if (k ==m){
-        k = 0;
-        if (temp_arr[6] == 1) {
-          updates.emplace_back(temp_arr);
-          
-          if (temp_arr[2] != 3 ) {  // Seek for pld unless it is a Delete msg.
-            seek_pld = true;
-          }
-          // std::cout<<mm.tob_update_symbol<<"\n";
-        } 
-        else if (seek_pld && temp_arr[10]) {
-          // std::cout<< updates.back()<< " -- ";
-          auto & mm = updates.back();
-          mm.pld_quantity = temp_arr [7];   // quantity of the payload
-          mm.pld_price = temp_arr[8];       // price of the payload
-          seek_pld = false;   // restore the flag to false again 
-          
-          // const auto & mm2 = updates.back();
-          // if (mm.pld_price != mm2.pld_price || mm.pld_quantity != mm2.pld_quantity)
-          //   {std:: cout << "AHAAA\n";}
-          // std::cout<< updates.back()<< "\n";
-        }
-      }
-    }
-  }
-  else {
     while (getline(in_file, line)) {
       if (line[0] == '='){
         continue;
@@ -118,7 +83,6 @@ std::vector<update_t> md_test_t::read_txt_to_vec(const string& f_name){
         updates.emplace_back(temp_arr);
       }
     }
-  }
   return updates;
 }
 
@@ -130,7 +94,7 @@ void md_test_t::match_mbo_mbp(match_fn_t match_fn ){
   // std::vector<mbp_update_t>::iterator tail_mbp{mbp_updates.begin()};
   // std::advance(head_mbp, 1);
 
-  for (const auto & x : mbo_updates){
+  for (const auto & x : mbo_updates_c){
     while (! (x.ts < (head_mbp -> ts)) ) {
       ++head_mbp;
     };
@@ -142,7 +106,6 @@ void md_test_t::match_mbo_mbp(match_fn_t match_fn ){
                              tail_mbp, 
                              [=](const mbp_update_t & M) {
       bool is_match = \
-        x.ts < (M.ts)                                                                &&
         static_cast<bool>(M.valid)                                                   &&
         M.oid == static_cast<uint32_t>(x.hdr_oid)                                    &&
         M.side    == x.hdr_side                                                      &&
@@ -156,16 +119,39 @@ void md_test_t::match_mbo_mbp(match_fn_t match_fn ){
 
     if(found != tail_mbp){
       found->valid = 0;
-      std::cout<< x.hdr_obu_type
-               << ", " << found->ts -  x.ts  
-               <<"\n";
+      // std::cout<< x.hdr_obu_type
+      //          << ", " << found->ts -  x.ts  
+      //          <<"\n";
     } 
     else {
-      std::cout<< "NOT PRESENT"<<"\n";
+      std::cout<< "NOT PRESENT: "<<x<<"\n";
     }
   }
 }
   
+void md_test_t::consolidate_mbo(){
+
+  auto it = mbo_updates.cbegin();
+
+  do {
+    mbo_updates_c.emplace_back(*it);
+    it = std::adjacent_find(it, std::cend(mbo_updates), 
+      [](const auto & lhs, const auto & rhs){
+        return lhs.hdr_oid !=rhs.hdr_oid;
+      }
+    );
+    if (it == mbo_updates.cend()){
+      break;
+    }
+    ++it;
+    mbo_updates_c.back().pld_price    = it -> pld_price;
+    mbo_updates_c.back().pld_quantity = it -> pld_quantity;
+    // std::cout<< mbo_updates_c.back() <<"\n";
+  } while(true);
+
+
+}
+
 
 void md_test_t::sort_entries() {
 std::sort(mbo_updates.begin(), mbo_updates.end(), [](auto &left, auto &right) {
@@ -178,7 +164,7 @@ std::sort(mbp_updates.begin(), mbp_updates.end(), [](auto &left, auto &right) {
 
 
 size_t md_test_t::mbo_size(){
-  return mbo_updates.size();
+  return mbo_updates_c.size();
 }
 
 size_t md_test_t::mbp_size(){

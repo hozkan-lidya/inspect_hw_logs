@@ -8,8 +8,8 @@
 #include <fstream>
 #include <ostream>
 #include <sstream>
-#include <algorithm>
 #include <functional>
+#include <algorithm>
 
 // #include <stdint.h>
 
@@ -71,7 +71,7 @@ struct __attribute__((__packed__)) mbo_update_raw_t
 };
 
 inline std::ostream & operator<<(std::ostream & os, const mbo_update_raw_t& u){
-  os<<u.ts<<", "<<u.pld_price<<", "<<u.pld_quantity;
+  os<<u.hdr_oid<<", ("<<static_cast<uint32_t>(u.hdr_oid)<<"), "<<u.hdr_obu_type<<", "<<u.pld_price<<", "<<u.pld_quantity;
   return os;
 }
 
@@ -107,10 +107,10 @@ class md_test_t
     md_test_t(const log_files_t& log_files);
     size_t mbo_size();
     size_t mbp_size();
-    std::vector <mbo_update_raw_t> mbo_updates;
-    std::vector <mbp_update_t> mbp_updates;
+
     void sort_entries();
     void match_mbo_mbp(match_fn_t match_fn);
+    void consolidate_mbo();
   private:
     template <typename update_t,  int m>  std::vector<update_t> read_txt_to_vec(const string& f_name);
     // template <typename update_t,  int m>  std::vector<mbo_update_raw_t> read_txt_to_vec(const string& f_name);
@@ -119,4 +119,7 @@ class md_test_t
 
     const string _mbo_file_name;
     const string& _mbp_file_name;
+    std::vector <mbo_update_raw_t> mbo_updates;
+    std::vector <mbo_update_raw_t> mbo_updates_c;
+    std::vector <mbp_update_t> mbp_updates;
 };

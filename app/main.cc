@@ -67,12 +67,14 @@ int main()
 
   md_test_t md_test(log_files);
   // md_test.sort_entries();
-
-
-  cout<< md_test.mbo_size() << " - " << md_test.mbp_size() <<"\n";
+  // cout<< md_test.mbo_size() << " - " << md_test.mbp_size() <<"\n";
+  md_test.consolidate_mbo();
+  
   auto foo_f = [] (int m) -> void {
     // NOP
   };
+  
   md_test.match_mbo_mbp( foo_f );
+  // std::cout<<"mbo_size: "<<md_test.mbo_size()<<"\n";
 
 }
