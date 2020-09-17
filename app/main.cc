@@ -62,8 +62,9 @@ void read_2(std::string file_name) {
 
 int main()
 {
-  log_files_t log_files{"data/bb_200915_1.log", 
-                        "data/mbpu_200915_1.log"};
+  log_files_t log_files{"../data/bb_200915_1.log", 
+                        "../data/mbpu_200915_1.log"
+                        };
 
   md_test_t md_test(log_files);
   // md_test.sort_entries();
@@ -71,6 +72,7 @@ int main()
   md_test.consolidate_mbo();
   
   auto foo_f = [] (int m) -> void {
+    ++m;
     // NOP
   };
   
