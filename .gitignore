@@ -2,4 +2,4 @@
 .vscode
 data
 build
-outputs
+out

@@ -7,65 +7,24 @@ using std::ifstream;
 using std::getline;
 using std::stringstream;
 
-
-void read_1(std::string file_name){
-  std::ifstream in_file;
-  in_file.open(file_name);
-  if (in_file.is_open()) {
-    cout<<"ahaha\n";
-    // int number;
-    string str;
-    // char c;
-    string line;
-    while(in_file >> str ){
-        std::cout << str << "\n";
-        }
-  }
-  in_file.close();
-}
-
-template <int m, typename update_t>
-void read_2(std::string file_name) {
-
-  std::vector <update_t> updates;
-  updates.reserve(0xFFFF);
-  int k =0;
-
-
-  std::ifstream in_file(file_name);
-  std::string line, ss;
-
-  std::array<uint64_t, m> temp_arr;
-  
-  while (getline(in_file, line))
-  {
-    auto x = line.c_str()[0];
-    if (x == '='){
-      continue;
-    }
-    std::stringstream ss_line(line);
-    ss_line >> ss;
-    // cout << ss<< "\n ";
-
-    ss_line >> temp_arr[ k++ ];
-    if (k ==m){
-      k = 0;
-      updates.emplace_back(temp_arr);
-      auto mm = updates.back();
-      cout<< updates.back().ts<<", ";
-      cout<<"\n";
-    }
-
-    }
-
-}
-
-int main()
+int main(int argc, char *argv[])
 {
-  log_files_t log_files{"../data/bb_200915_1.log", 
-                        "../data/mbpu_200915_1.log"
-                        };
+  auto cmd_0 = string("cut -d' ' -f2- ") + argv[1] + string(" | grep '^[0-9]' > /tmp/bb.txt") ;
+  auto cmd_1 = string("cut -d' ' -f2- ") + argv[2] + string(" | grep '^[0-9]' > /tmp/mbpu.txt") ;
+  // auto cmd_1 = string("head ") + string(argv[1]) ;
 
+  std::system(cmd_0.c_str()); // execute the UNIX command "ls -l >test.txt"
+  std::system(cmd_1.c_str()); // execute the UNIX command "ls -l >test.txt"
+  // std::cout << std::ifstream("test.txt").rdbuf();
+  (void)argc;
+  log_files_t log_files{
+  // "../data/bb_200914_0.log", 
+  // "../data/mbpu_200914_0_Corrected.log"
+  // argv[1] , argv[2]
+  "/tmp/bb.txt", 
+  "/tmp/mbpu.txt"
+  };
+  
   md_test_t md_test(log_files);
   // md_test.sort_entries();
   // cout<< md_test.mbo_size() << " - " << md_test.mbp_size() <<"\n";
@@ -75,8 +34,8 @@ int main()
     ++m;
     // NOP
   };
-  
-  md_test.match_mbo_mbp( foo_f );
-  // std::cout<<"mbo_size: "<<md_test.mbo_size()<<"\n";
 
+  md_test.match_mbo_mbp( foo_f );
+  md_test.check_unmatched_mbp();
+  // std::cout<<"mbo_size: "<<md_test.mbo_size()<<"\n";
 }

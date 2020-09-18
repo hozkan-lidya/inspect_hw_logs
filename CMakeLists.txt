@@ -2,14 +2,14 @@ cmake_minimum_required(VERSION 3.10)
 
 project(markets_tests)
 
-set(CMAKE_CXX_STANDARD 22)
+set(CMAKE_CXX_STANDARD)
 SET(CMAKE_CXX_COMPILER /usr/bin/clang++)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS "-std=gnu++17 -Wall -Wextra -fPIC -Iinclude")
+set(CMAKE_CXX_FLAGS "-std=c++17  -Wall -Wextra -fPIC -Iinclude")  #-lstdc++fs
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
 

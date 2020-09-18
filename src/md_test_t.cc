@@ -1,6 +1,5 @@
 #include "md_test_t.hpp"
 
-
 md_test_t::md_test_t(const log_files_t& log_files) :
 _mbo_file_name(log_files.mbo_file_name),
 _mbp_file_name(log_files.mbp_file_name) {
@@ -18,21 +17,21 @@ std::vector<update_t> md_test_t::read_txt_to_vec(const string& f_name){
   // bool seek_pld{false};
 
   std::ifstream in_file(f_name);
-  std::string line, ss;
+  // std::string line/*, ss*/;
 
   std::array<uint64_t, m> temp_arr;
     // std::cout<< sizeof(update_t) / sizeof(uint32_t)<<" -- \n";
   
 
-    while (getline(in_file, line)) {
-      if (line[0] == '='){
-        continue;
-      }
-      std::stringstream ss_line(line);
-      ss_line >> ss;
+    while (in_file) {
+      // if (line[0] == '='){
+      //   continue;
+      // }
+      // std::stringstream ss_line(line);
+      // ss_line >> ss;
       // std::cout << ss<< "\n ";
 
-      ss_line >> temp_arr[ k++ ];
+      in_file >> temp_arr[ k++ ];
       if (k ==m){
         k = 0;
         updates.emplace_back(temp_arr);
@@ -40,6 +39,7 @@ std::vector<update_t> md_test_t::read_txt_to_vec(const string& f_name){
     }
   return updates;
 }
+
 
 void md_test_t::match_mbo_mbp(match_fn_t match_fn ){
   match_fn(5);
@@ -53,9 +53,6 @@ void md_test_t::match_mbo_mbp(match_fn_t match_fn ){
     while (! (x.ts < (head_mbp -> ts)) ) {
       ++head_mbp;
     };
-    // while (x.ts > (tail_mbp -> ts) ) {
-    //   ++tail_mbp;
-    // };
 
     auto found = std::find_if(head_mbp, 
                              tail_mbp, 
@@ -74,37 +71,56 @@ void md_test_t::match_mbo_mbp(match_fn_t match_fn ){
 
     if(found != tail_mbp){
       found->valid = 0;
-      // std::cout<< x.hdr_obu_type
+
+      // std::cout<< x.hdr_oid 
+      //          << ", " << x.hdr_obu_type
       //          << ", " << found->ts -  x.ts  
       //          <<"\n";
+      std::cout<<x << " - " << *found << "\n";
+
     } 
     else {
-      // std::cout<< "NOT PRESENT: "<<x<<"\n";
+      std::cout<< "NOT PRESENT: "<< x <<"\n";
     }
   }
 }
-  
-void md_test_t::consolidate_mbo(){
 
+void md_test_t::consolidate_mbo(){
   auto it = mbo_updates.cbegin();
 
   do {
     mbo_updates_c.emplace_back(*it);
+    // std::cout<< mbo_updates_c.back() <<"  // ";
     it = std::adjacent_find(it, std::cend(mbo_updates), 
       [](const auto & lhs, const auto & rhs){
-        return lhs.hdr_oid !=rhs.hdr_oid;
+        return lhs.hdr_oid  != rhs.hdr_oid    ||
+        lhs.hdr_obu_type != rhs.hdr_obu_type  ||
+        lhs.hdr_symbol != rhs.hdr_symbol      ||
+        lhs.hdr_side != rhs.hdr_side          ||
+        (static_cast<bool>(lhs.pld_ready) && static_cast<bool>(lhs.pld_valid));
       }
     );
     if (it == mbo_updates.cend()){
+      // std::cout << "\n";
       break;
     }
+    // std::cout<< *it <<" - ";
     ++it;
+    // std::cout<< *it <<" - ";
+    
     mbo_updates_c.back().pld_price    = it -> pld_price;
     mbo_updates_c.back().pld_quantity = it -> pld_quantity;
+
     // std::cout<< mbo_updates_c.back() <<"\n";
   } while(true);
+}
 
-
+void md_test_t::check_unmatched_mbp(){
+  for (auto & x  : mbp_updates){
+    if (x.valid) { 
+      std::cout<<"UNMATCHED: "<< x << "\n";
+    }
+  }
 }
 
 
@@ -125,3 +141,4 @@ size_t md_test_t::mbo_size(){
 size_t md_test_t::mbp_size(){
   return mbp_updates.size();
 }
+

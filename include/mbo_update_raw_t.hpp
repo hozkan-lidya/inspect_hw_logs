@@ -23,6 +23,6 @@ struct __attribute__((__packed__)) mbo_update_raw_t
 };
 
 inline std::ostream & operator<<(std::ostream & os, const mbo_update_raw_t& u){
-  os<<u.hdr_oid<<", ("<<static_cast<uint32_t>(u.hdr_oid)<<"), "<<u.hdr_obu_type<<", "<<u.pld_price<<", "<<u.pld_quantity;
+  os<<u.ts<<", "<<u.hdr_oid<<"("<<static_cast<uint32_t>(u.hdr_oid)<<"), "<<u.hdr_obu_type<<", "<<u.pld_price<<", "<<u.pld_quantity;
   return os;
 }

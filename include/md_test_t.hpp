@@ -14,6 +14,8 @@ class md_test_t
     void sort_entries();
     void match_mbo_mbp(match_fn_t match_fn);
     void consolidate_mbo();
+    void check_unmatched_mbp();
+
   private:
     template <typename update_t,  int m>  std::vector<update_t> read_txt_to_vec(const string& f_name);
 
