@@ -24,18 +24,20 @@ int main(int argc, char *argv[])
   "/tmp/bb.txt", 
   "/tmp/mbpu.txt"
   };
-  
   md_test_t md_test(log_files);
+  std::cout<<"Constructed.. " << "\n";
   // md_test.sort_entries();
   // cout<< md_test.mbo_size() << " - " << md_test.mbp_size() <<"\n";
   md_test.consolidate_mbo();
-  
+  std::cout<<"Consolidated.. " << "\n";
   auto foo_f = [] (int m) -> void {
     ++m;
     // NOP
   };
 
   md_test.match_mbo_mbp( foo_f );
+  std::cout<<"Matched.. " << "\n";
+
   md_test.check_unmatched_mbp();
   // std::cout<<"mbo_size: "<<md_test.mbo_size()<<"\n";
 }

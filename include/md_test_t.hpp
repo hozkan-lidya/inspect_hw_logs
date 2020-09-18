@@ -3,6 +3,8 @@
 #include "mbp_update.hpp"
 #include "mbo_update_raw_t.hpp"
 
+using price_t = uint32_t;
+using qty_t = uint32_t;
 class md_test_t
 {
   public:
@@ -24,4 +26,6 @@ class md_test_t
     std::vector <mbo_update_raw_t> mbo_updates;
     std::vector <mbo_update_raw_t> mbo_updates_c;
     std::vector <mbp_update_t> mbp_updates;
+    std::unordered_map<unique_key_t, std::pair<price_t, qty_t>> mbo;
+    void update_mbo(const unique_key_t&, const mbo_update_raw_t &);
 };

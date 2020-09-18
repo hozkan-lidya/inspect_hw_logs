@@ -48,27 +48,54 @@ void md_test_t::match_mbo_mbp(match_fn_t match_fn ){
   // auto tail_mbp =mbp_updates.begin();
   // std::vector<mbp_update_t>::iterator tail_mbp{mbp_updates.begin()};
   // std::advance(head_mbp, 1);
-
+    price_t p{10};
+    qty_t q{10};
   for (const auto & x : mbo_updates_c){
+    std::cout<<x<< "\n";
+    unique_key_t this_key{x.hdr_oid, (symbol_t)x.hdr_symbol,(bool)x.hdr_side}; 
     while (! (x.ts < (head_mbp -> ts)) ) {
       ++head_mbp;
     };
 
+    switch(x.hdr_obu_type) {
+      case 0: {
+        p = x.pld_price;
+        q = x.pld_quantity;
+        break;
+        };
+
+      case 1: {
+        p = mbo[this_key].first;
+        q = x.pld_quantity;
+        break;
+      };
+
+      case 3: 
+        std::tie(p, q) = mbo[this_key];
+        break;
+      default: {
+        std::cout<<"Buraya girmemesi lazim" << x.hdr_obu_type<<" \n";
+        break;
+      };
+  }
     auto found = std::find_if(head_mbp, 
                              tail_mbp, 
-                             [=](const mbp_update_t & M) {
+                             [&](const mbp_update_t & M) {
+      
+      
       bool is_match = \
         static_cast<bool>(M.valid)                                                   &&
         M.oid == static_cast<uint32_t>(x.hdr_oid)                                    &&
         M.side    == x.hdr_side                                                      &&
         M.symbol  == x.hdr_symbol                                                    &&
         static_cast<bool>(M.add_rm) ^ static_cast<bool>(x.hdr_obu_type)              &&
-        (x.hdr_obu_type != 0 || (M.price == x.pld_price && M.qty == x.pld_quantity)) &&
-        (x.hdr_obu_type != 1 || M.qty == x.pld_quantity);
+        M.price == p                                                                 &&
+        M.qty == q;
+        // (x.hdr_obu_type != 0 || (M.price == x.pld_price && M.qty == x.pld_quantity)) &&
+        // (x.hdr_obu_type != 1 || M.qty == x.pld_quantity);
     
       return is_match;
       } );
-
     if(found != tail_mbp){
       found->valid = 0;
 
@@ -80,7 +107,26 @@ void md_test_t::match_mbo_mbp(match_fn_t match_fn ){
 
     } 
     else {
-      std::cout<< "NOT PRESENT: "<< x <<"\n";
+      std::cout<< "NOT PRESENT: "<< x <<"\t @ TRY "<< p <<" / "<<q<<"\n";
+    }
+
+    update_mbo(this_key, x);
+  }
+}
+
+void md_test_t::update_mbo(const unique_key_t& key, const mbo_update_raw_t & x){
+  switch(x.hdr_obu_type) {
+    case 0: {
+      mbo[key] = std::make_pair(x.pld_price, x.pld_quantity);
+      break;
+    }
+    case 1: {
+      mbo[key].second =  mbo[key].second - x.pld_quantity;
+      break;
+    }
+    case 3: {
+      mbo.erase(key);
+      break;      
     }
   }
 }
@@ -111,7 +157,7 @@ void md_test_t::consolidate_mbo(){
     mbo_updates_c.back().pld_price    = it -> pld_price;
     mbo_updates_c.back().pld_quantity = it -> pld_quantity;
 
-    // std::cout<< mbo_updates_c.back() <<"\n";
+    // std::cout<< mbo_`updates_c.back() <<"\n";
   } while(true);
 }
 
@@ -122,7 +168,6 @@ void md_test_t::check_unmatched_mbp(){
     }
   }
 }
-
 
 void md_test_t::sort_entries() {
 std::sort(mbo_updates.begin(), mbo_updates.end(), [](auto &left, auto &right) {

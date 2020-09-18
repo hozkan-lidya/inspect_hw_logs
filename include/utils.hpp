@@ -16,6 +16,7 @@
 
 using timestamp_t = uint64_t;
 using oid_t = uint64_t;
+using symbol_t = uint16_t;
 using std::string;
 using match_fn_t =  std::function<void(uint64_t)>;
 
@@ -31,3 +32,35 @@ struct log_files_t
 
 };
 
+struct unique_key_t
+{
+  oid_t    oid;
+  symbol_t sym;
+  bool    side;
+
+  bool operator==(const unique_key_t &other) const
+  { return (oid == other.oid
+            && sym == other.sym
+            && side == other.side);
+  }
+};
+
+namespace std {
+
+  template <>
+  struct hash<unique_key_t>
+  {
+    std::size_t operator()(const unique_key_t& k) const
+    {
+      using std::hash;
+      // Compute individual hash values for first,
+      // second and third and combine them using XOR
+      // and bit shifting:
+      uint64_t res =  (k.oid << 17)                     |
+                      static_cast<uint64_t>(k.sym << 1) |
+                      static_cast<uint64_t>(k.side);
+      return hash<uint64_t>()(res);
+    }
+  };
+
+}
