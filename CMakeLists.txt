@@ -11,7 +11,7 @@ endif()
 
 set(CMAKE_CXX_FLAGS "-std=c++17  -Wall -Wextra -fPIC -Iinclude")  #-lstdc++fs
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 # SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 

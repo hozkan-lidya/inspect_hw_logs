@@ -22,6 +22,6 @@ struct __attribute__((__packed__)) mbp_update_t
    //  mbo_update_t(mbo_update_t& other);
 };
 inline std::ostream & operator<<(std::ostream & os, const mbp_update_t& u){
-  os<<u.ts<<", "<<u.oid<<", "<<u.side;
+  os<<u.ts<<", "<<u.oid<<", "<<u.price<<", "<<u.qty;
   return os;
 }

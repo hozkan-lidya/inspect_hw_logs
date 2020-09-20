@@ -11,6 +11,8 @@
 #include <sstream>
 #include <functional>
 #include <algorithm>
+#include <cassert>
+
 
 // #include <stdint.h>
 
