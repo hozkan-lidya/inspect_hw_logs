@@ -148,24 +148,34 @@ void md_test_t::update_mbo(const unique_key_t& key, const mbo_update_raw_t & x){
 
 void md_test_t::consolidate_mbo(){
   auto it = mbo_updates.cbegin();
+  bool is_corner_case_0 = false;
 
   do {
     mbo_updates_c.emplace_back(*it);
+    if(is_corner_case_0){
+          ++it;
+          // std::cout<< "CC: "<< *it << *(it+1)   <<"\n";
+          is_corner_case_0 = false;
+      }
     // std::cout<< mbo_updates_c.back() <<"  // ";
     it = std::adjacent_find(it, std::cend(mbo_updates), 
-      [](const auto & lhs, const auto & rhs){
-        auto pld_cond = static_cast<bool>(lhs.pld_ready) && static_cast<bool>(lhs.pld_valid) && lhs.hdr_obu_type==1 ;
-        //  && std::make_pair(lhs.hdr_oid, lhs.hdr_obu_type) = std::make_pair(rhs.hdr_oid, rhs.hdr_obu_type) 
+      [&](const auto & lhs, const auto & rhs){
+        auto pld_cond = static_cast<bool>(lhs.pld_ready) && static_cast<bool>(lhs.pld_valid) ;
         
-        return 
-        (lhs.hdr_oid       != rhs.hdr_oid )          ||
-        lhs.hdr_obu_type  != rhs.hdr_obu_type     ||
-        lhs.hdr_symbol    != rhs.hdr_symbol       ||
-        lhs.hdr_side      != rhs.hdr_side         
-        || pld_cond
-        ;
-      }
+        //  && std::make_pair(lhs.hdr_oid, lhs.hdr_obu_type) = std::make_pair(rhs.hdr_oid, rhs.hdr_obu_type) 
+        auto ret_cond = lhs.hdr_oid   != rhs.hdr_oid          
+          || lhs.hdr_obu_type  != rhs.hdr_obu_type     
+          || lhs.hdr_symbol    != rhs.hdr_symbol       
+          || lhs.hdr_side      != rhs.hdr_side         
+          || pld_cond
+          ;
+          if(ret_cond && rhs.pld_ready==1 && rhs.pld_valid==1) {
+            is_corner_case_0 = true;
+          }
+        return ret_cond; 
+        }
     );
+  
     if (it == mbo_updates.cend()){
       // std::cout << "\n";
       break;
@@ -176,7 +186,8 @@ void md_test_t::consolidate_mbo(){
     
     mbo_updates_c.back().pld_price    = it -> pld_price;
     mbo_updates_c.back().pld_quantity = it -> pld_quantity;
-
+    
+    
     // std::cout<< mbo_`updates_c.back() <<"\n";
   } while(true);
 }

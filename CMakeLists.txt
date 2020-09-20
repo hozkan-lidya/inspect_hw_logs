@@ -1,15 +1,16 @@
 cmake_minimum_required(VERSION 3.10)
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 
 project(markets_tests)
 
-set(CMAKE_CXX_STANDARD)
-SET(CMAKE_CXX_COMPILER /usr/bin/clang++)
+set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard to be used")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS "-std=c++17  -Wall -Wextra -fPIC -Iinclude")  #-lstdc++fs
+set(CMAKE_CXX_FLAGS "-std=c++2a  -Wall -Wextra -fPIC -Iinclude")  #-lstdc++fs
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
