@@ -6,6 +6,8 @@
 using price_t = uint32_t;
 using qty_t = uint32_t;
 using mbp_side_t = std::map<price_t, qty_t>;
+using mbp_side_t_a = std::map<price_t, qty_t, std::less<uint32_t>>;
+using mbp_side_t_b = std::map<price_t, qty_t, std::greater<uint32_t>>;
 
 // struct mbp_t
 // {
@@ -15,6 +17,8 @@ using mbp_side_t = std::map<price_t, qty_t>;
 // };
 
 using mbp_t = std::array<mbp_side_t, 2>;
+// using mbp_t = std::pair<mbp_side_t_a, mbp_side_t_b>;
+
 
 class md_test_t
 {
@@ -23,6 +27,8 @@ class md_test_t
     md_test_t(const log_files_t& log_files);
     size_t mbo_size();
     size_t mbp_size();
+    std::unordered_map<unique_key_t, std::pair<price_t, qty_t>> mbo;
+    std::vector<mbp_t> mbps;
 
     void sort_entries();
     void match_mbo_mbp(match_fn_t match_fn);
@@ -37,8 +43,9 @@ class md_test_t
     std::vector <mbo_update_raw_t> mbo_updates;
     std::vector <mbo_update_raw_t> mbo_updates_c;
     std::vector <mbp_update_t> mbp_updates;
-    std::unordered_map<unique_key_t, std::pair<price_t, qty_t>> mbo;
-    std::vector<mbp_t> mbps;
+
     void update_mbo(const unique_key_t&, const mbo_update_raw_t &);
-    void update_mbps(const mbo_update_raw_t & x);
+    void mbp_add(const price_t p , const qty_t q, const uint32_t sym, const uint32_t side);
+    void mbp_exec_del(const price_t p , const qty_t q, const uint32_t sym, const uint32_t side);
+
 };

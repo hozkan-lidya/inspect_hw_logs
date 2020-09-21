@@ -39,5 +39,12 @@ int main(int argc, char *argv[])
   std::cout<<"Matched.. " << "\n";
 
   md_test.check_unmatched_mbp();
+  
+  auto &  temp =  md_test.mbps[0][0];
+  
+  for (auto it=temp.cbegin(); it != temp.cend();it++){
+      std::cout<< it->first<< "  " << it->second<<"\n";
+  }
+
   // std::cout<<"mbo_size: "<<md_test.mbo_size()<<"\n";
 }
