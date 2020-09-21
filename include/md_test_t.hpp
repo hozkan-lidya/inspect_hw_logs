@@ -5,6 +5,17 @@
 
 using price_t = uint32_t;
 using qty_t = uint32_t;
+using mbp_side_t = std::map<price_t, qty_t>;
+
+// struct mbp_t
+// {
+//   mbp_side_t bid;
+//   mbp_side_t ask;
+//   /* data */
+// };
+
+using mbp_t = std::array<mbp_side_t, 2>;
+
 class md_test_t
 {
   public:
@@ -27,5 +38,7 @@ class md_test_t
     std::vector <mbo_update_raw_t> mbo_updates_c;
     std::vector <mbp_update_t> mbp_updates;
     std::unordered_map<unique_key_t, std::pair<price_t, qty_t>> mbo;
+    std::vector<mbp_t> mbps;
     void update_mbo(const unique_key_t&, const mbo_update_raw_t &);
+    void update_mbps(const mbo_update_raw_t & x);
 };

@@ -3,7 +3,8 @@
 md_test_t::md_test_t(const log_files_t& log_files) :
 _mbo_file_name(log_files.mbo_file_name),
 _mbp_file_name(log_files.mbp_file_name) {
-
+  mbps.reserve(0xF);
+  
   mbo_updates = read_txt_to_vec<mbo_update_raw_t, 11>(_mbo_file_name);
   mbp_updates = read_txt_to_vec<mbp_update_t, 11>(_mbp_file_name);
   sort_entries();
@@ -48,6 +49,64 @@ std::vector<update_t> md_test_t::read_txt_to_vec(const string& f_name){
     }
   return updates;
 }
+void md_test_t::update_mbo(const unique_key_t& key, const mbo_update_raw_t & x){
+
+
+  switch(x.hdr_obu_type) {
+    case 0: {
+      mbo[key] = std::make_pair(x.pld_price, x.pld_quantity);
+      break;
+    }
+    case 1: {
+      // std::cout<<"" << mbo[key].second;
+      mbo[key].second =  mbo[key].second - x.pld_quantity;
+      // std::cout<<" = " << mbo[key].second<<" + " <<x.pld_quantity << "\n";
+      assert(!(mbo[key].second < 0));
+      if (mbo[key].second==0) {
+        mbo.erase(key);
+      }
+
+      break;
+    }
+    case 3: {
+      assert(mbo.find(key) != mbo.end() );
+      mbo.erase(key);
+      break;      
+    }
+  }
+}
+
+void md_test_t::update_mbps(const mbo_update_raw_t & x){ 
+  mbp_side_t::iterator it;
+  const auto tobu = x.hdr_obu_type;
+  const auto tside = x.hdr_side;
+  auto this_book = std::make_unique<mbp_side_t> (mbps[tobu][tside]);
+
+  switch(tobu){
+    case 0: {
+      this_book->insert(std::make_pair(x.pld_price, x.pld_quantity));
+      it = this_book->find(x.pld_price);
+      if (it != this_book->end()) std::cout <<"AHA: " << x.pld_quantity<< "  --  "<< this_book->find(x.pld_price)->second<< "\n";
+      break;
+    }
+
+    case 1: {
+      it = this_book->find(x.pld_price);
+      if (it != this_book->end()){
+        it->second -= x.pld_quantity;
+      }
+      break;
+    }
+
+    case 3: {
+      it = this_book->find(x.pld_price);
+      if (it != this_book->end()){
+        this_book->erase(it);
+      }
+      break;
+    }
+  }
+  }
 
 
 void md_test_t::match_mbo_mbp(match_fn_t match_fn ){
@@ -108,43 +167,23 @@ void md_test_t::match_mbo_mbp(match_fn_t match_fn ){
       //          << ", " << x.hdr_obu_type
       //          << ", " << found->ts -  x.ts  
       //          <<"\n";
-      std::cout<<x << " - " << *found <<",\t"<< found->ts - x.ts <<"\n";
+      std::cout<<x << " - " << *found <<",\t"<< x.hdr_obu_type << ","<< found->ts - x.ts <<"\n";
 
     } 
     else {
       std::cout<< "NOT PRESENT: "<< x <<"\t @ TRY "<< p <<"/"<<q<<"\n";
     }
 
+    update_mbps(x);
     update_mbo(this_key, x);
+
+    
+    
   }
 }
 
-void md_test_t::update_mbo(const unique_key_t& key, const mbo_update_raw_t & x){
 
 
-  switch(x.hdr_obu_type) {
-    case 0: {
-      mbo[key] = std::make_pair(x.pld_price, x.pld_quantity);
-      break;
-    }
-    case 1: {
-      // std::cout<<"" << mbo[key].second;
-      mbo[key].second =  mbo[key].second - x.pld_quantity;
-      // std::cout<<" = " << mbo[key].second<<" + " <<x.pld_quantity << "\n";
-      assert(!(mbo[key].second < 0));
-      if (mbo[key].second==0) {
-        mbo.erase(key);
-      }
-
-      break;
-    }
-    case 3: {
-      assert(mbo.find(key) != mbo.end() );
-      mbo.erase(key);
-      break;      
-    }
-  }
-}
 
 void md_test_t::consolidate_mbo(){
   auto it = mbo_updates.cbegin();

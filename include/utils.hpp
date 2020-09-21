@@ -12,15 +12,17 @@
 #include <functional>
 #include <algorithm>
 #include <cassert>
+#include <memory> 
+#include <map>
 
 
 // #include <stdint.h>
+using std::string;
 
 using timestamp_t = uint64_t;
-using oid_t = uint64_t;
-using symbol_t = uint16_t;
-using std::string;
-using match_fn_t =  std::function<void(uint64_t)>;
+using oid_t       = uint64_t;
+using symbol_t    = uint16_t;
+using match_fn_t  = std::function<void(uint64_t)>;
 
 template <typename T>
 void foo()
