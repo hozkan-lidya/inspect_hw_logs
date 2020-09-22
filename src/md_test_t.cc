@@ -5,8 +5,7 @@ _mbo_file_name(log_files.mbo_file_name),
 _mbp_file_name(log_files.mbp_file_name) {
   mbps.reserve(0xF);
   for (auto i=0; i<0xFF;++i){
-    mbp_t temp;
-    mbps.emplace_back(temp);
+    mbps.emplace_back(*(std::unique_ptr<mbp_t>(new mbp_t)));
   }
   mbo_updates = read_txt_to_vec<mbo_update_raw_t, 11>(_mbo_file_name);
   mbp_updates = read_txt_to_vec<mbp_update_t, 11>(_mbp_file_name);
@@ -54,8 +53,27 @@ std::vector<update_t> md_test_t::read_txt_to_vec(const string& f_name){
 }
 
 
-void md_test_t::update_mbo(const unique_key_t& key, const mbo_update_raw_t & x){
+int md_test_t::is_tob_f( price_t p, uint32_t sym, uint32_t side){
+  uint32_t tob_p, tob_q;
+  int res = -1;
+  if(side==0) {
+    tob_p = mbps[sym].ask.begin()->first;
+    tob_q = mbps[sym].ask.begin()->second;
+    res = (tob_p >= p) ? 1: 0;
+  // std::cout<<"ASK:\t"<< tob_p << "("<<tob_q<< ") " << p << "\t/"<<side<< ", "<<res<< "\n";
+  }  
+  else if(side==1) {
+    tob_p = mbps[sym].bid.begin()->first;
+    tob_q = mbps[sym].bid.begin()->second;
+    res = (tob_p <= p) ? 1: 0;
+    // std::cout<<"BID:\t"<< tob_p << "("<<tob_q<< ") " << p << "\t/"<<side<< ", "<<res<< "\n";
+  }
+  return res;
+}
 
+int md_test_t::update_mbo(const unique_key_t& key, const mbo_update_raw_t & x){
+
+  int is_tob;
   const auto side = x.hdr_side;
   const auto sym = x.hdr_symbol;
 
@@ -65,59 +83,87 @@ void md_test_t::update_mbo(const unique_key_t& key, const mbo_update_raw_t & x){
       p_q = std::make_pair(x.pld_price, x.pld_quantity);
       assert(x.pld_price!=0);
       mbo[key] = p_q;
+      // std::cout<< is_tob << "\n";
       mbp_add(x.pld_price, x.pld_quantity, sym, side);
+      is_tob = is_tob_f(x.pld_price, sym, side);
       break;
     }
     case 1: {
       // std::cout<<"" << mbo[key].second;
       mbo[key].second =  mbo[key].second - x.pld_quantity;
-      mbp_exec_del(mbo[key].first,  x.pld_quantity , sym, side);
-
+      mbp_exec_del(mbo[key].first,  x.pld_quantity, sym, side);
+      // std::cout<<"EXEC: "<< mbo[key].first << " - " <<  x.pld_quantity << " - " <<  side<<  "\n"; 
       assert(!(mbo[key].second < 0));
       if (mbo[key].second==0) {
         mbo.erase(key);
       }
-
+      is_tob = 1;
       break;
     }
     case 3: {
       auto it = mbo.find(key);
       assert( it != mbo.end() );
+      is_tob = is_tob_f(mbo[key].first, sym, side);
+      // std::cout<<"DEL: "<< it->second.first << " - " <<  it->second.second << " - " <<  side<<  "\n";
       mbp_exec_del(it->second.first,  it->second.second , sym, side);
       mbo.erase(key);
       break;      
     }
   }
+  // std::cout << is_tob<<", "<<x.hdr_obu_type<<"\n";
+  return is_tob;
 }
 
+
 void md_test_t::mbp_add(const price_t p , const qty_t q, const uint32_t sym, const uint32_t side){
-  mbp_side_t::iterator it;
-  auto & this_book = mbps[sym][side];
-  this_book[p] += q;
+  
+  
+  if (side==0) {
+    mbps[sym].ask[p] += q;
+  } 
+  else {
+    mbps[sym].bid[p] += q;
+  }
+  // this_book[p] += q;
       // std::cout << "CALL: " <<p<< "  " << q << "  " << sym << "  " <<side << "\n";
   // it = this_book.find(p);
   // if (it != this_book.end()) {
   //   std::cout <<"AHA: " << q<< "  --  "<< it->second<< "\n";
-
 }
 
 void md_test_t::mbp_exec_del(const price_t p , const qty_t q, const uint32_t sym, const uint32_t side){
   // mbp_side_t::iterator it;
-  auto & this_book = mbps[sym][side];
-  auto it = this_book.find(p);
-  
-  if (it == this_book.end()) {
-    // std::cout << "NOT FOUND "<< p << " -- " << mbps[0][0].size() << "\n";
+  std::variant<mbp_side_b_t*, mbp_side_a_t*>  this_book;  
+
+  if(side == 0)
+    this_book = & mbps[sym].ask;
+  else{
+    this_book = & mbps[sym].bid;
+   }
+  auto call_find = [&](auto& obj) { 
+    return obj->find(p); 
+    };
+  auto call_end = [&](auto& obj) {
+    return obj->end(); 
+    };
+  auto v_it = std::visit(std::move(call_find), this_book);
+  auto v_end = std::visit(std::move(call_end), this_book);
+
+  if (v_it == v_end) {
     throw std::runtime_error("  MBP NOT FOUND (E).");
   }
-  
-  it->second -= q;
-  
-  if (it->second < 0){
+  // std::cout<<"VIT: "<< v_it->first <<" - "<< v_it->second; 
+    v_it->second -= q;
+  // std::cout<<"  and AFTER: "<< v_it->first <<" - "<< v_it->second<<"\n";
+
+  if (v_it->second < 0){
     throw std::runtime_error("ERROR: NEGATICE QTY");
   }
-  else if (it->second == 0){
-      this_book.erase(it);
+  else if (v_it->second == 0){
+    auto call_erase = [&](auto& obj) {
+      obj->erase(v_it); 
+    };
+    std::visit(std::move(call_erase), this_book);
   }
 }
 
@@ -173,6 +219,8 @@ void md_test_t::match_mbo_mbp(match_fn_t match_fn ){
     
       return is_match;
       } );
+
+    auto is_tob = update_mbo(this_key, x);
     if(found != tail_mbp){
       found->valid = 0;
 
@@ -180,14 +228,13 @@ void md_test_t::match_mbo_mbp(match_fn_t match_fn ){
       //          << ", " << x.hdr_obu_type
       //          << ", " << found->ts -  x.ts  
       //          <<"\n";
-      // std::cout<<x << " - " << *found <<",\t"<< x.hdr_obu_type << ","<< found->ts - x.ts <<"\n";
+      std::cout<<x.hdr_oid << ", "<< x.hdr_obu_type << ", "<< is_tob <<  ", "<< found->ts - x.ts << "\n";
 
     } 
     else {
       std::cout<< "NOT PRESENT: "<< x <<"\t @ TRY "<< p <<"/"<<q<<"\n";
     }
 
-    update_mbo(this_key, x);
    
   }
 }
@@ -258,7 +305,6 @@ std::sort(mbp_updates.begin(), mbp_updates.end(), [](auto &left, auto &right) {
 });
 }
 
-
 size_t md_test_t::mbo_size(){
   return mbo_updates_c.size();
 }
@@ -266,4 +312,3 @@ size_t md_test_t::mbo_size(){
 size_t md_test_t::mbp_size(){
   return mbp_updates.size();
 }
-

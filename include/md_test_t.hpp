@@ -5,18 +5,18 @@
 
 using price_t = uint32_t;
 using qty_t = uint32_t;
-using mbp_side_t = std::map<price_t, qty_t>;
-using mbp_side_t_a = std::map<price_t, qty_t, std::less<uint32_t>>;
-using mbp_side_t_b = std::map<price_t, qty_t, std::greater<uint32_t>>;
+// using mbp_side_t = std::map<price_t, qty_t>;
+using mbp_side_a_t = std::map<price_t, qty_t, std::less<price_t>>;
+using mbp_side_b_t = std::map<price_t, qty_t, std::greater<price_t>>;
 
-// struct mbp_t
-// {
-//   mbp_side_t bid;
-//   mbp_side_t ask;
-//   /* data */
-// };
+struct mbp_t
+{
+  mbp_side_a_t ask;
+  mbp_side_b_t bid;
+  /* data */
+};
 
-using mbp_t = std::array<mbp_side_t, 2>;
+// using mbp_t = std::array<mbp_side_t, 2>;
 // using mbp_t = std::pair<mbp_side_t_a, mbp_side_t_b>;
 
 
@@ -34,7 +34,7 @@ class md_test_t
     void match_mbo_mbp(match_fn_t match_fn);
     void consolidate_mbo();
     void check_unmatched_mbp();
-
+    int is_tob_f(price_t, uint32_t, uint32_t);
   private:
     template <typename update_t,  int m>  std::vector<update_t> read_txt_to_vec(const string& f_name);
 
@@ -44,7 +44,7 @@ class md_test_t
     std::vector <mbo_update_raw_t> mbo_updates_c;
     std::vector <mbp_update_t> mbp_updates;
 
-    void update_mbo(const unique_key_t&, const mbo_update_raw_t &);
+    int update_mbo(const unique_key_t&, const mbo_update_raw_t &);
     void mbp_add(const price_t p , const qty_t q, const uint32_t sym, const uint32_t side);
     void mbp_exec_del(const price_t p , const qty_t q, const uint32_t sym, const uint32_t side);
 
